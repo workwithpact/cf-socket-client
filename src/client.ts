@@ -37,7 +37,7 @@ export default class SocketClient {
 
   _reconnect() {
     if (this.config.reconnect) {
-      setTimeout(this.connect, 1000 * ((this.config.reconnectDelay || 1) + (this.config.reconnectDelayMiltiplier || 2) * this.unsuccessfulConnectionAttempts));
+      setTimeout(this.connect, 1000 * ((this.config.reconnectDelay || 1) + (this.config.reconnectDelayMultiplier || 2) * this.unsuccessfulConnectionAttempts));
       ++this.unsuccessfulConnectionAttempts;
     }
   }
@@ -46,6 +46,13 @@ export default class SocketClient {
     this.on('profile', (profile:UserData) => {
       this.unsuccessfulConnectionAttempts = 0;
       this.profile = profile
+      if (this.config.stickySession) {
+        try {
+          window.localStorage.setItem(`pact_ws_${this.config.endpoint.toString()}`, this.profile.id);
+        } catch(e) {
+
+        }
+      }
     })
     this.on('close', () => {
       this._reconnect()
@@ -89,6 +96,16 @@ export default class SocketClient {
       console.warn('Already connected; Aborting connect() call.')
       return
     }
+    const url = new URL(this.config.endpoint);
+    if (this.config.stickySession) {
+      let sessionId:string|null = null;
+      try {
+        sessionId = window.localStorage.getItem(`pact_ws_${this.config.endpoint.toString()}`);
+      } catch (e) {}
+      if (sessionId) {
+        url.searchParams.set('session', sessionId);
+      }
+    }
     this.socket = typeof window !== 'undefined' ? new window.WebSocket(this.config.endpoint) : new WebSocket(this.config.endpoint);
     this.socket.addEventListener('close', this._reconnect);
     this.socket.addEventListener('error', this._reconnect);
@@ -109,7 +126,7 @@ export const defaultOptions: SocketClientConfiguration = {
   reconnect: true,
   connect: true,
   reconnectDelay: 1,
-  reconnectDelayMiltiplier: 2
+  reconnectDelayMultiplier: 2
 }
 
 export interface SocketClientConfiguration {
@@ -118,7 +135,7 @@ export interface SocketClientConfiguration {
   reconnect?:boolean;
   connect?:boolean;
   reconnectDelay?:number;
-  reconnectDelayMiltiplier?:number;
+  reconnectDelayMultiplier?:number;
 }
 
 export type SocketClientEventCallback = (data:any, type:string, profile?:UserData) => void;
