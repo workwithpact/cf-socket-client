@@ -1,0 +1,17 @@
+{
+  "name": "cf-socket-client",
+  "version": "1.0.0",
+  "description": "A client implementation for our CloudFlare-Workers-Backed WebSocket Server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/workwithpact/cf-socket-client.git"
+  },
+  "author": "Alex Leclair <alex@workwithpact.com>",
+  "license": "ISC"
+}
