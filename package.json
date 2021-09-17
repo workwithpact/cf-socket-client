@@ -13,5 +13,8 @@
     "url": "git+https://github.com/workwithpact/cf-socket-client.git"
   },
   "author": "Alex Leclair <alex@workwithpact.com>",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "ws": "^8.2.2"
+  }
 }

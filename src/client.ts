@@ -1,13 +1,32 @@
+import {WebSocket} from 'ws';
+
 export default class SocketClient {
   socket?:WebSocket;
   config:SocketClientConfiguration;
-  listeners:{[key: string]:SocketClientEventCallback[]}
+  listeners:{[key: string]:SocketClientEventCallback[]} = {}
   connected:boolean = false;
   profile?:UserData;
   unsuccessfulConnectionAttempts:number = 0;
 
   constructor(config: SocketClientConfiguration | null) {
-    this.config = config || defaultOptions;
+    let mergedConfig = {
+      ...defaultOptions,
+    }
+    if (config) {
+      mergedConfig = {
+        ...mergedConfig,
+        ...config
+      }
+    }
+    this.config = mergedConfig;
+
+    this._reconnect = this._reconnect.bind(this);
+    this.bindEvents = this.bindEvents.bind(this);
+    this.on = this.on.bind(this);
+    this.trigger = this.trigger.bind(this);
+    this.off = this.off.bind(this);
+    this.connect = this.connect.bind(this);
+    this.send = this.send.bind(this);
 
     this.bindEvents();
 
@@ -18,13 +37,12 @@ export default class SocketClient {
 
   _reconnect() {
     if (this.config.reconnect) {
-      setTimeout(this.connect, 1000 * (this.config.reconnectDelay + this.config.reconnectDelayMiltiplier * this.unsuccessfulConnectionAttempts));
+      setTimeout(this.connect, 1000 * ((this.config.reconnectDelay || 1) + (this.config.reconnectDelayMiltiplier || 2) * this.unsuccessfulConnectionAttempts));
       ++this.unsuccessfulConnectionAttempts;
     }
   }
 
   bindEvents() {
-    
     this.on('profile', (profile:UserData) => {
       this.unsuccessfulConnectionAttempts = 0;
       this.profile = profile
@@ -47,7 +65,7 @@ export default class SocketClient {
     Object.keys(this.listeners).filter(k => type === k || k === '*').forEach(k => {
       this.listeners[k].forEach((cb:SocketClientEventCallback) => {
         try {
-          cb(type, data);
+          cb(data, type, this.profile);
         } catch(e) {
           console.error('Callback failed', {
             type,
@@ -59,21 +77,34 @@ export default class SocketClient {
     })
   }
 
+  send(message:SocketData|string, data?:any) {
+    const finalMessage =  typeof message === 'string' ? {
+      type: message,
+      data
+    } : message
+    this.socket.send(JSON.stringify(finalMessage))
+  }
   connect() {
     if (this.connected) {
+      console.warn('Already connected; Aborting connect() call.')
       return
     }
-    this.socket = this.socket || new WebSocket(this.config.endpoint);
+    this.socket = typeof window !== 'undefined' ? new window.WebSocket(this.config.endpoint) : new WebSocket(this.config.endpoint);
     this.socket.addEventListener('close', this._reconnect);
     this.socket.addEventListener('error', this._reconnect);
-    this.socket.addEventListener('message', (data:MessageEvent<any>) => {
-
+    this.socket.addEventListener('open', () => {
+      this.connected = true;
+      this.trigger('connect');
+    });
+    this.socket.addEventListener('message', (message:MessageEvent<any>) => {
+      const data:SocketData = JSON.parse(message.data) as SocketData;
+      this.trigger(data.type, data.data);
     })
   }
 }
 
 export const defaultOptions: SocketClientConfiguration = {
-  endpoint: `wss://${(typeof window !== 'undefined' && window.location && window.location.hostname) || 'localhost'}?room=default`,
+  endpoint: `wss://${(typeof window !== 'undefined' && window.location && window.location.hostname) || 'localhost'}/websocket?room=default`,
   stickySession: true,
   reconnect: true,
   connect: true,
@@ -86,8 +117,8 @@ export interface SocketClientConfiguration {
   stickySession?:boolean;
   reconnect?:boolean;
   connect?:boolean;
-  reconnectDelay:number;
-  reconnectDelayMiltiplier:number;
+  reconnectDelay?:number;
+  reconnectDelayMiltiplier?:number;
 }
 
 export type SocketClientEventCallback = (data:any, type:string, profile?:UserData) => void;
@@ -98,4 +129,8 @@ export interface UserData {
   suffix: number;
   connectionDetails?: {[key: string]: any} | null;
   role: 'user' | 'admin'
+}
+export interface SocketData {
+  type: string,
+  data?: any
 }
