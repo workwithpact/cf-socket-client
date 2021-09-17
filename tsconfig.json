@@ -4,7 +4,7 @@
     "strictNullChecks": true,
     "target": "es5", 
     "outDir": "dist",
-    "module": "commonjs",
+    "module": "umd",
     "moduleResolution": "node",
     "sourceMap": true,
     "lib": ["es2015", "dom"],
