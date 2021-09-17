@@ -1,4 +1,4 @@
-import SocketClient from '../src/client';
+import SocketClient from '../src/nodeClient';
 
 const client = new SocketClient({
   endpoint: 'wss://websockets.workwithpact.com/websocket?room=demo'

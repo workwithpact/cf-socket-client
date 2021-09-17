@@ -16,5 +16,8 @@
   "license": "ISC",
   "devDependencies": {
     "ws": "^8.2.2"
+  },
+  "dependencies": {
+    "websocket-polyfill": "^0.0.3"
   }
 }

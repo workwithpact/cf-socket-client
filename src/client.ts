@@ -1,5 +1,3 @@
-import {WebSocket} from 'ws';
-
 export default class SocketClient {
   socket?:WebSocket;
   config:SocketClientConfiguration;
@@ -89,7 +87,7 @@ export default class SocketClient {
       type: message,
       data
     } : message
-    this.socket.send(JSON.stringify(finalMessage))
+    this.socket?.send(JSON.stringify(finalMessage))
   }
   connect() {
     if (this.connected) {
@@ -106,7 +104,7 @@ export default class SocketClient {
         url.searchParams.set('session', sessionId);
       }
     }
-    this.socket = typeof window !== 'undefined' ? new window.WebSocket(this.config.endpoint) : new WebSocket(this.config.endpoint);
+    this.socket = new WebSocket(this.config.endpoint);
     this.socket.addEventListener('close', this._reconnect);
     this.socket.addEventListener('error', this._reconnect);
     this.socket.addEventListener('open', () => {
