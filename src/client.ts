@@ -6,14 +6,19 @@ export default class SocketClient {
   profile?:UserData;
   unsuccessfulConnectionAttempts:number = 0;
 
-  constructor(config: SocketClientConfiguration | null) {
+  constructor(config: SocketClientConfiguration | null | string) {
     let mergedConfig = {
       ...defaultOptions,
     }
-    if (config) {
+    if (config && typeof config !== 'string') {
       mergedConfig = {
         ...mergedConfig,
         ...config
+      }
+    } else if (config) {
+      mergedConfig = {
+        ...mergedConfig,
+        endpoint: config
       }
     }
     this.config = mergedConfig;
