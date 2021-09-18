@@ -7,7 +7,7 @@ First, install this package by running `npm i cf-socket-client`, or if you're us
 
 
 ## Examples
-- [Chat demo](https://websockets.workwithpact.com/)
-- [Poll demo](https://websockets.workwithpact.com/)
-- [_Ephemeral_ Poll demo](https://websockets.workwithpact.com/)
-- [Live map of active users](https://websockets.workwithpact.com/), build using the ephemeral poll functionality
+- [Chat demo](https://websockets.workwithpact.com/chat)
+- [Poll demo](https://websockets.workwithpact.com/poll)
+- [_Ephemeral_ Poll demo](https://websockets.workwithpact.com/ephemeral)
+- [Live map of active users](https://websockets.workwithpact.com/livemap), build using the ephemeral poll functionality
