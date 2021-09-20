@@ -1,4 +1,4 @@
-export default class SocketClient {
+export class SocketClient {
   socket?:WebSocket;
   config:SocketClientConfiguration;
   listeners:{[key: string]:SocketClientEventCallback[]} = {}
