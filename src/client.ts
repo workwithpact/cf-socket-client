@@ -5,6 +5,7 @@ export default class SocketClient {
   connected:boolean = false;
   profile?:UserData;
   unsuccessfulConnectionAttempts:number = 0;
+  pingInterval?: number;
 
   constructor(config: SocketClientConfiguration | null | string) {
     let mergedConfig = {
@@ -110,11 +111,27 @@ export default class SocketClient {
       }
     }
     this.socket = new WebSocket(this.config.endpoint);
-    this.socket.addEventListener('close', this._reconnect);
-    this.socket.addEventListener('error', this._reconnect);
+    this.socket.addEventListener('close', () => {
+      this.connected = false;
+      this.trigger('close');
+      this._reconnect()
+    });
+    this.socket.addEventListener('error', () => {
+      this.connected = false;
+      this.trigger('close');
+      this._reconnect()
+    });
     this.socket.addEventListener('open', () => {
       this.connected = true;
       this.trigger('connect');
+      if (this.pingInterval) {
+        clearInterval(this.pingInterval);
+      }
+      if (this.config.pingInterval){
+        this.pingInterval = setInterval(() => {
+          this.send('ping', (new Date()).getTime());
+        }, this.config.pingInterval * 1000)
+      }
     });
     this.socket.addEventListener('message', (message:MessageEvent<any>) => {
       const data:SocketData = JSON.parse(message.data) as SocketData;
@@ -129,7 +146,8 @@ export const defaultOptions: SocketClientConfiguration = {
   reconnect: true,
   connect: true,
   reconnectDelay: 1,
-  reconnectDelayMultiplier: 2
+  reconnectDelayMultiplier: 2,
+  pingInterval: 5,
 }
 
 export interface SocketClientConfiguration {
@@ -139,6 +157,7 @@ export interface SocketClientConfiguration {
   connect?:boolean;
   reconnectDelay?:number;
   reconnectDelayMultiplier?:number;
+  pingInterval?:number;
 }
 
 export type SocketClientEventCallback = (data:any, type:string, profile?:UserData) => void;
