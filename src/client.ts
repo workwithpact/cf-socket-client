@@ -102,9 +102,9 @@ export class SocketClient {
     }
     const url = new URL(this.config.endpoint);
     if (this.config.stickySession) {
-      let sessionId:string|null = null;
+      let sessionId:string|null = this.profile && this.profile.id ? this.profile.id : null;
       try {
-        sessionId = window.localStorage.getItem(`pact_ws_${this.config.endpoint.toString()}`);
+        sessionId = window.localStorage.getItem(`pact_ws_${this.config.endpoint.toString()}`) || sessionId;
       } catch (e) {}
       if (sessionId) {
         url.searchParams.set('session', sessionId);
